@@ -1,86 +1,50 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import {
-  fetchPendingContent,
-  approveContent,
-  flagContent,
-} from '../../features/moderation/moderationSlice';
+import { Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute';
 
-export default function ContentModerationPage() {
-  const dispatch = useDispatch();
-  const { pendingContent, status } = useSelector((state) => state.moderation);
-  const [flagReasonFor, setFlagReasonFor] = useState(null);
-  const [reason, setReason] = useState('');
+import LandingPage from '../pages/shared/LandingPage';
+import LoginPage from '../pages/shared/LoginPage';
+import SignUpPage from '../pages/shared/SignUpPage';
+import OnboardingInterests from '../pages/shared/OnboardingInterests';
+import ContentDetailPage from '../pages/shared/ContentDetailPage';
 
-  useEffect(() => {
-    dispatch(fetchPendingContent());
-  }, [dispatch]);
+import HomeFeedPage from '../pages/user/HomeFeedPage';
+import ExplorePage from '../pages/user/ExplorePage';
+import ProfilePage from '../pages/user/ProfilePage';
+import WishlistPage from '../pages/user/WishlistPage';
+import NotificationsPage from '../pages/user/NotificationsPage';
 
-  const submitFlag = (id) => {
-    if (!reason.trim()) return;
-    dispatch(flagContent({ contentId: id, reason }));
-    setFlagReasonFor(null);
-    setReason('');
-  };
+import WriterDashboardPage from '../pages/writer/WriterDashboardPage';
+import CreateContentPage from '../pages/writer/CreateContentPage';
 
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
+import UserManagementPage from '../pages/admin/UserManagementPage';
+import ContentModerationPage from '../pages/admin/ContentModerationPage';
+import CategoryManagementPage from '../pages/admin/CategoryManagementPage';
+
+export default function AppRoutes() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-6 py-8 pb-24">
-      <h1 className="text-2xl font-bold mb-6">Content Moderation</h1>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/onboarding" element={<OnboardingInterests />} />
+      <Route path="/content/:id" element={<ContentDetailPage />} />
 
-      {status === 'loading' && <p className="text-gray-500">Loading...</p>}
-      {status === 'succeeded' && pendingContent.length === 0 && (
-        <p className="text-gray-500">Nothing pending review. All caught up.</p>
-      )}
+      <Route path="/home" element={<ProtectedRoute allowedRoles={['user', 'writer', 'admin']}><HomeFeedPage /></ProtectedRoute>} />
+      <Route path="/explore" element={<ProtectedRoute allowedRoles={['user', 'writer', 'admin']}><ExplorePage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute allowedRoles={['user', 'writer', 'admin']}><ProfilePage /></ProtectedRoute>} />
+      <Route path="/wishlist" element={<ProtectedRoute allowedRoles={['user', 'writer', 'admin']}><WishlistPage /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute allowedRoles={['user', 'writer', 'admin']}><NotificationsPage /></ProtectedRoute>} />
 
-      <div className="flex flex-col gap-3">
-        {pendingContent.map((item) => (
-          <div
-            key={item.id}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-4"
-          >
-            <Link to={`/content/${item.id}`} className="block mb-3">
-              <span className="text-xs uppercase text-lime-400 font-semibold">
-                {item.category}
-              </span>
-              <h2 className="font-semibold mt-1">{item.title}</h2>
-              <p className="text-xs text-gray-500 mt-1">by {item.author}</p>
-            </Link>
+      <Route path="/writer/dashboard" element={<ProtectedRoute allowedRoles={['writer', 'admin']}><WriterDashboardPage /></ProtectedRoute>} />
+      <Route path="/writer/create" element={<ProtectedRoute allowedRoles={['writer', 'admin']}><CreateContentPage /></ProtectedRoute>} />
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => dispatch(approveContent(item.id))}
-                className="flex-1 bg-lime-400 text-black rounded-md py-2 text-sm font-semibold"
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => setFlagReasonFor(item.id)}
-                className="flex-1 border border-red-800 text-red-400 rounded-md py-2 text-sm font-semibold"
-              >
-                Flag
-              </button>
-            </div>
+      <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboardPage /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><UserManagementPage /></ProtectedRoute>} />
+      <Route path="/admin/moderation" element={<ProtectedRoute allowedRoles={['admin']}><ContentModerationPage /></ProtectedRoute>} />
+      <Route path="/admin/categories" element={<ProtectedRoute allowedRoles={['admin']}><CategoryManagementPage /></ProtectedRoute>} />
 
-            {flagReasonFor === item.id && (
-              <div className="flex gap-2 mt-3">
-                <input
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="Reason for flagging..."
-                  className="flex-1 bg-gray-800 border border-gray-700 rounded-md px-3 py-1.5 text-sm outline-none"
-                />
-                <button
-                  onClick={() => submitFlag(item.id)}
-                  className="bg-red-700 px-3 rounded-md text-sm"
-                >
-                  Submit
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
+      <Route path="*" element={<LandingPage />} />
+    </Routes>
   );
 }
